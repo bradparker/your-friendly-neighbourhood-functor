@@ -1,15 +1,9 @@
-const Identity = (value) => {
-  const instance = {
-    run: () => value,
+const Identity = (value) => ({
+  run: () => value,
 
-    map: (f) => Identity(f(value)),
+  map: (f) => Identity(f(value)),
 
-    flatten: () => instance.run(),
-
-    flatMap: (f) => instance.map(f).flatten()
-  }
-
-  return instance
-}
+  flatMap: (f) => f(value)
+})
 
 module.exports = { Identity }

@@ -1,27 +1,25 @@
-const Continuation = (continuation) => {
-  const instance = {
-    run: (done) => continuation(done),
+const Continuation = (action) => {
+  const continuation = {
+    run: (done) => action(done),
 
     map: (f) => (
       Continuation((done) => (
-        instance.run((result) => (
+        continuation.run((result) => (
           done(f(result))
         ))
       ))
     ),
 
-    flatten: () => (
+    flatMap: (f) => (
       Continuation((done) => (
-        instance.run((result) => (
-          result.run(done)
+        continuation.run((result) => (
+          f(result).run(done)
         ))
       ))
-    ),
-
-    flatMap: (f) => instance.map(f).flatten()
+    )
   }
 
-  return instance
+  return continuation
 }
 
 module.exports = { Continuation }

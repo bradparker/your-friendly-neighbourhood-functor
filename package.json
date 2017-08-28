@@ -4,9 +4,13 @@
   "main": "index.js",
   "license": "MIT",
   "scripts": {
-    "test": "mocha **/__tests__/*-test.js"
+    "test": "mocha **/__tests__/*-test.js",
+    "lint": "standard"
   },
   "dependencies": {
     "mocha": "^3.5.0"
+  },
+  "devDependencies": {
+    "standard": "^10.0.3"
   }
 }

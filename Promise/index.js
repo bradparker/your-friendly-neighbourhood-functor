@@ -1,56 +1,12 @@
-const id = a => a
-
 const Promise = (action) => {
-  const instance = {
+  const promise = {
     run: (success, failure) => (
       action(success, failure)
     ),
 
-    map: (f) => (
-      Promise((resolve, reject) => (
-        instance.run(
-          (result) => resolve(f(result)),
-          (error) => reject(error)
-        )
-      ))
-    ),
-
-    flatten: () => (
-      Promise((resolve, reject) => (
-        instance.run(
-          (result) => result.run(resolve, reject),
-          reject
-        )
-      ))
-    ),
-
-    flatMap: (f) => instance.map(f).flatten(),
-
-    bimap: (success, failure) => (
-      Promise((resolve, reject) => (
-        instance.run(
-          (result) => resolve(success(result)),
-          (error) => reject(failure(error))
-        )
-      ))
-    ),
-
-    biFlatten: () => (
-      Promise((resolve, reject) => (
-        instance.run(
-          (result) => result.run(resolve, reject),
-          (error) => error.run(resolve, reject)
-        )
-      ))
-    ),
-
-    biFlatMap: (success, failure) => (
-      instance.bimap(success, failure).biFlatten()
-    ),
-
     then: (success, failure) => (
       Promise((resolve, reject) => {
-        const result = instance.run(success, failure)
+        const result = promise.run(success, failure)
 
         if (typeof result.then === 'function') {
           return result.run(resolve, reject)
@@ -60,16 +16,24 @@ const Promise = (action) => {
       })
     ),
 
+    map: (f) => (
+      promise.then(f, Promise.reject)
+    ),
+
+    flatMap: (f) => (
+      promise.then(f, Promise.reject)
+    ),
+
     catch: (f) => (
-      instance.then(id, f)
+      promise.then(result => result, f)
     )
   }
 
-  return instance
+  return promise
 }
 
 Promise.resolve = (value) => (
-  Promise((resolve) => resolve(value))
+  Promise((resolve, _) => resolve(value))
 )
 
 Promise.reject = (error) => (
