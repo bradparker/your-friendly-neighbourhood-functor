@@ -248,8 +248,8 @@ export class Context<A> {
 export class Context<A> {
   constructor(private readonly value: A) {}
 
-  public changeValue<B>(changer: (value: A) => B): Context<B> {
-    const newContent = changer(this.value);
+  public changeValue<B>(change: (value: A) => B): Context<B> {
+    const newContent = change(this.value);
     return new Context(newContent);
   }
 }
@@ -311,15 +311,15 @@ a.changeContextAndValue(num => {
 export class Context<A> {
   constructor(private readonly value: A) {}
 
-  public changeValue<B>(changer: (value: A) => B): Context<B> {
-    const newContent = changer(this.value);
+  public changeValue<B>(change: (value: A) => B): Context<B> {
+    const newContent = change(this.value);
     return new Context(newContent);
   }
 
   public changeContextAndValue<B>(
-    changer: (value: A) => Context<B>
+    change: (value: A) => Context<B>
   ): Context<B> {
-    return changer(this.value);
+    return change(this.value);
   }
 }
 ```
@@ -356,10 +356,10 @@ export class AsynchronousContext<R, A> {
 export class AsynchronousContext<R, A> {
   // ...
 
-  public changeValue<B>(changer: (value: A) => B): AsynchronousContext<R, B> {
+  public changeValue<B>(change: (value: A) => B): AsynchronousContext<R, B> {
     return new AsynchronousContext(resolve => {
       return this.operation((value: A) => {
-        const newValue = changer(value);
+        const newValue = change(value);
         return resolve(newValue);
       });
     });
@@ -379,11 +379,11 @@ export class AsynchronousContext<R, A> {
   // ...
 
   public changeContextAndValue<B>(
-    changer: (value: A) => AsynchronousContext<R, B>
+    change: (value: A) => AsynchronousContext<R, B>
   ): AsynchronousContext<R, B> {
     return new AsynchronousContext(resolve => {
       return this.operation((value: A) => {
-        const newContext = changer(value);
+        const newContext = change(value);
         return ???;
       });
     });
@@ -421,11 +421,11 @@ export class AsynchronousContext<R, A> {
   // ...
 
   public changeContextAndValue<B>(
-    changer: (value: A) => AsynchronousContext<R, B>
+    change: (value: A) => AsynchronousContext<R, B>
   ): AsynchronousContext<R, B> {
     return new AsynchronousContext(resolve => {
       return this.operation((value: A) => {
-        const newContext = changer(value);
+        const newContext = change(value);
         return newContext.execute(resolve);
       });
     });
@@ -496,12 +496,12 @@ export class FallibleAsynchronousContext<R, A> {
   // ...
 
   public changeValue<B>(
-    changer: (value: A) => B
+    change: (value: A) => B
   ): FallibleAsynchronousContext<R, B> {
     return new FallibleAsynchronousContext((resolve, reject) => {
       return this.operation(
         (value: A) => {
-          const newValue = changer(value);
+          const newValue = change(value);
           return resolve(newValue);
         },
         (error: Error) => {
@@ -525,12 +525,12 @@ export class FallibleAsynchronousContext<R, A> {
   // ...
 
   public changeContextAndValue<B>(
-    changer: (value: A) => FallibleAsynchronousContext<R, B>
+    change: (value: A) => FallibleAsynchronousContext<R, B>
   ): FallibleAsynchronousContext<R, B> {
     return new FallibleAsynchronousContext((resolve, reject) => {
       return this.operation(
         (value: A) => {
-          const newContext = changer(value);
+          const newContext = change(value);
           return newContext.execute(resolve, reject);
         },
         (error: Error) => {
