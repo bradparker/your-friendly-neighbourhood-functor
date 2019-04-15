@@ -4,8 +4,7 @@ export class AsynchronousContext<R, A> {
   public changeValue<B>(change: (value: A) => B): AsynchronousContext<R, B> {
     return new AsynchronousContext(resolve => {
       return this.execute((value: A) => {
-        const newValue = change(value);
-        return resolve(newValue);
+        return resolve(change(value));
       });
     });
   }
@@ -15,8 +14,7 @@ export class AsynchronousContext<R, A> {
   ): AsynchronousContext<R, B> {
     return new AsynchronousContext(resolve => {
       return this.execute((value: A) => {
-        const newContext = change(value);
-        return newContext.execute(resolve);
+        return change(value).execute(resolve);
       });
     });
   }

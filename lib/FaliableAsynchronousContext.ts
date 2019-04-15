@@ -10,15 +10,9 @@ export class FallibleAsynchronousContext<R, A> {
     change: (value: A) => B
   ): FallibleAsynchronousContext<R, B> {
     return new FallibleAsynchronousContext((resolve, reject) => {
-      return this.execute(
-        (value: A) => {
-          const newValue = change(value);
-          return resolve(newValue);
-        },
-        (error: Error) => {
-          return reject(error);
-        }
-      );
+      return this.execute((value: A) => {
+        return resolve(change(value));
+      }, reject);
     });
   }
 
@@ -26,15 +20,9 @@ export class FallibleAsynchronousContext<R, A> {
     change: (value: A) => FallibleAsynchronousContext<R, B>
   ): FallibleAsynchronousContext<R, B> {
     return new FallibleAsynchronousContext((resolve, reject) => {
-      return this.execute(
-        (value: A) => {
-          const newContext = change(value);
-          return newContext.execute(resolve, reject);
-        },
-        (error: Error) => {
-          return reject(error);
-        }
-      );
+      return this.execute((value: A) => {
+        return change(value).execute(resolve, reject);
+      }, reject);
     });
   }
 }
