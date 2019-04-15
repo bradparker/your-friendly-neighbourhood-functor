@@ -1,11 +1,13 @@
 export class Context<A> {
-  constructor(private readonly content: A) {}
+  constructor(public readonly value: A) {}
 
-  public changeContent<B>(changer: (a: A) => B): Context<B> {
-    return new Context(changer(this.content));
+  public changevalue<B>(changer: (a: A) => B): Context<B> {
+    const newValue = changer(this.value);
+    return new Context(newValue);
   }
 
-  public changeContextAndContent<B>(changer: (a: A) => Context<B>): Context<B> {
-    return changer(this.content);
+  public changeContextAndvalue<B>(changer: (a: A) => Context<B>): Context<B> {
+    const newContext = changer(this.value);
+    return new Context(newContext.value);
   }
 }
