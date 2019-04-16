@@ -130,6 +130,13 @@ const getSlugLoadAndAuthorize = (request: Request) => (
 
 Psst (Don't sweat the currying)
 
+. . .
+
+```
+const getSlugLoadAndAuthorizePartiallyApplied: (claims: Claims)
+  => Promise<Article>
+```
+
 ---
 
 # How're we going to do that?
