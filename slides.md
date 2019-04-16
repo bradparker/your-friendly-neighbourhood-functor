@@ -437,7 +437,7 @@ Code time.
 
 . . .
 
-```
+```typescript
 export class AsynchronousContext<R, A> {
   constructor(
     public readonly execute: (resolve: (value: A) => R) => R
@@ -455,7 +455,7 @@ Code time.
 
 . . .
 
-```
+```typescript
 export class AsynchronousContext<R, A> {
   constructor(
     public readonly execute: (resolve: (value: A) => R) => R
@@ -483,7 +483,7 @@ Code time.
 
 . . .
 
-```
+```typescript
 export class AsynchronousContext<R, A> {
   constructor(public readonly execute: (resolve: (value: A) => R) => R) {}
 
@@ -523,7 +523,7 @@ An asynchronous context containing a value
 
 . . .
 
-```
+```typescript
 class AsynchronousContext<A> { }
 ```
 
@@ -538,7 +538,7 @@ Code, code, code.
 . . .
 
 
-```
+```typescript
 export class FallibleAsynchronousContext<R, A> {
   constructor(
     private readonly execute: (
@@ -560,7 +560,7 @@ MOAR CODE!
 
 . . .
 
-```
+```typescript
 export class FallibleAsynchronousContext<R, A> {
   constructor(
     private readonly execute: (
@@ -591,7 +591,7 @@ Code, nearly there.
 
 . . .
 
-```
+```typescript
 export class FallibleAsynchronousContext<R, A> {
   constructor(
     private readonly execute: (
@@ -632,7 +632,7 @@ Code!!!
 
 . . .
 
-```
+```typescript
 export class FallibleAsynchronousContext<R, A> {
   constructor(
     private readonly execute: (
