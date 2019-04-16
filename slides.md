@@ -52,20 +52,36 @@ No sweat!
 We're going to be given these functions
 
 ```typescript
-const decodeToken: (authorization: string)        => Promise<Claims>
+const getAuth:   (request: Request) => string
+const getSlug:   (request: Request) => string
+const getParams: (request: Request) => UpdateArticleParams
 
-const authorize: (slug: string, claims: Claims)   => Promise<void>
+const decodeToken: (authorization: string)
+  => Promise<Claims>
 
-const validate: (params: RequestParams)           => Promise<ValidParams>
+const loadAndAuthorize: (slug: string, claims: Claims)
+  => Promise<Article>
 
-const update: (slug: string, params: ValidParams) => Promise<Article>
+const validate: (params: UpdateArticleParams, article: Article)
+  => Promise<ValidUpdateArticleParams>
 
-const respondSuccess: (article: Article)          => Response
+const update: (article: Article, params: ValidUpdateArticleParams)
+  => Promise<Article>
 
-const respondFailure: (error: Error)              => Response
+const respondSuccess: (article: Article)
+  => Response
+
+const respondFailure: (error: Error)
+  => Response
 ```
 
-Our job is just to put them together :)
+. . .
+
+Our job is just to put them together to produce a function
+
+```
+const handler: (request: Request) => Promise<Response>
+```
 
 ---
 
@@ -73,34 +89,56 @@ Our job is just to put them together :)
 
 . . .
 
-Let's look at those first two functions.
+Let's start by just trying to get to loadAndAuthorize
 
 . . .
 
+We have these relevant bits
 
 ```typescript
-const decodeToken: (authorization: string)        => Promise<Claims>
+const getAuth:   (request: Request) => string
 
-const authorize: (slug: string, claims: Claims)   => Promise<void>
+const decodeToken: (authorization: string)
+  => Promise<Claims>
+
+const loadAndAuthorize: (slug: string, claims: Claims)
+  => Promise<Article>
 ```
 
 ---
 
 # How're we going to do that?
 
-Let's look at those first two functions.
+We can produce a function that goes from the request to Claims pretty easy
 
 ```typescript
-const decodeToken: (authorization: string)        => Promise<Claims>
-                                                             ~~~~~~
-const authorize: (slug: string, claims: Claims)   => Promise<void>
-                                        ~~~~~~
+const getAuthAndDecodeToken = (request: Request): Promise<Claims> =>
+  decodeToken(getAuth(request));
 ```
 
 . . .
 
-We need to somehow get the Claims which is in the Promise returned by
-decodeToken into authorize
+We can also make one that goes from Request and Claims to Article.
+
+```
+const getSlugLoadAndAuthorize = (request: Request) => (
+  claims: Claims
+): Promise<Article> => loadAndAuthorize(getSlug(request));
+```
+
+. . .
+
+Psst (Don't sweat the currying)
+
+---
+
+# How're we going to do that?
+
+But how do we get from `Promise<Claims>` to `Promise<Article>`?
+
+. . .
+
+How do we get at the Claims getSlugLoadAndAuthorize needs?
 
 ---
 
@@ -217,7 +255,7 @@ What might we want to do with a `Context<A>`?
 
 . . .
 
-1 - Create one
+1 - Create / use one
 
 . . .
 
@@ -227,7 +265,7 @@ What might we want to do with a `Context<A>`?
 
 # Context
 
-## Create
+## Create / use
 
 . . .
 
@@ -242,6 +280,8 @@ export class Context<A> {
 # Context
 
 ## Change
+
+Code time.
 
 . . .
 
@@ -289,6 +329,34 @@ const a = new Context(5);
 const b = new Context("Less than or equal to 5");
 const c = new Context("Greater than 5");
 
+const d = a.changeValue(num => {
+  if (num <= 5) {
+    return b.value;
+  } else {
+    return c.value;
+  }
+});
+
+// >>> .type d
+// const d: Context<string>
+```
+
+. . .
+
+We _could_ do this... but we could maybe do a little better.
+
+---
+
+
+# Context
+
+## Change
+
+```
+const a = new Context(5);
+const b = new Context("Less than or equal to 5");
+const c = new Context("Greater than 5");
+
 const d = a.changeContextAndValue(num => {
   if (num <= 5) {
     return b;
@@ -306,6 +374,10 @@ const d = a.changeContextAndValue(num => {
 # Context
 
 ## Change
+
+Code time.
+
+. . .
 
 ```
 export class Context<A> {
@@ -352,7 +424,9 @@ AsynchronousContext?
 
 # Asynchronous context
 
-## Create
+## Create / use
+
+Code time.
 
 . . .
 
@@ -369,6 +443,8 @@ export class AsynchronousContext<R, A> {
 # Asynchronous context
 
 ## Change
+
+Code time.
 
 . . .
 
@@ -395,6 +471,10 @@ export class AsynchronousContext<R, A> {
 # Asynchronous context
 
 ## Change
+
+Code time.
+
+. . .
 
 ```
 export class AsynchronousContext<R, A> {
@@ -444,7 +524,12 @@ class AsynchronousContext<A> { }
 
 # Fallible, asynchronous context
 
-## Create
+## Create / use
+
+Code, code, code.
+
+. . .
+
 
 ```
 export class FallibleAsynchronousContext<R, A> {
@@ -462,6 +547,11 @@ export class FallibleAsynchronousContext<R, A> {
 # Fallible, asynchronous context
 
 ## Change
+
+
+MOAR CODE!
+
+. . .
 
 ```
 export class FallibleAsynchronousContext<R, A> {
@@ -489,6 +579,10 @@ export class FallibleAsynchronousContext<R, A> {
 # Fallible, asynchronous context
 
 ## Change
+
+Code, nearly there.
+
+. . .
 
 ```
 export class FallibleAsynchronousContext<R, A> {
@@ -521,6 +615,60 @@ export class FallibleAsynchronousContext<R, A> {
 }
 ```
 
+---
+
+# Fallible, asynchronous context
+
+## Change (from failure to success :))
+
+Code!!!
+
+. . .
+
+```
+export class FallibleAsynchronousContext<R, A> {
+  constructor(
+    private readonly execute: (
+      resolve: (value: A) => R,
+      reject: (error: Error) => R
+    ) => R
+  ) {}
+
+  public changeValue<B>(
+    change: (value: A) => B
+  ): FallibleAsynchronousContext<R, B> {
+    return new FallibleAsynchronousContext((resolve, reject) => {
+      return this.execute((value: A) => {
+        return resolve(change(value));
+      }, reject);
+    });
+  }
+
+  public changeContextAndValue<B>(
+    change: (value: A) => FallibleAsynchronousContext<R, B>
+  ): FallibleAsynchronousContext<R, B> {
+    return new FallibleAsynchronousContext((resolve, reject) => {
+      return this.execute((value: A) => {
+        return change(value).execute(resolve, reject);
+      }, reject);
+    });
+  }
+
+  public changeErrorToValue<B>(
+    change: (error: Error) => B
+  ): FallibleAsynchronousContext<R, B> {
+    return new FallibleAsynchronousContext((resolve, reject) => {
+      return this.execute(
+        resolve,
+        (error: Error) => {
+          return resolve(change(error));
+        }
+      );
+    });
+  }
+}
+```
+
 . . .
 
 That is _much_ more interesting!
@@ -546,11 +694,11 @@ One needs to pass it's value to next.
 These!
 
 ```typescript
-const decodeToken: (authorization: string)
+const getAuthAndDecodeToken = (request: Request)
   => Promise<Claims>
 
-const authorize: (slug: string, claims: Claims)
-  => Promise<void>
+const getSlugLoadAndAuthorize = (request: Request) => (claims: Claims)
+  => Promise<Article>
 ```
 
 ---
@@ -566,11 +714,31 @@ One needs to pass it's value to next.
 These?
 
 ```typescript
-const decodeToken: (authorization: string)
+const getAuthAndDecodeToken = (request: Request)
+  => Promise<Claims>
+
+const getSlugLoadAndAuthorizePartiallyApplied = (claims: Claims)
+  => Promise<Article>
+```
+
+---
+
+# Let's take stock
+
+We had two functions.
+
+That are both async and can fail.
+
+One needs to pass it's value to next.
+
+These??
+
+```typescript
+const getAuthAndDecodeToken = (request: Request)
   => FallibleAsynchronousContext<void, Claims>
 
-const authorize: (slug: string, claims: Claims)
-  => FallibleAsynchronousContext<void, void>
+const getSlugLoadAndAuthorizePartiallyApplied = (claims: Claims)
+  => FallibleAsynchronousContext<void, Article>
 ```
 
 ---
@@ -583,34 +751,14 @@ That are both async and can fail.
 
 One needs to pass it's value to next.
 
-These!?
+These??!!
 
 ```typescript
-const decodeToken: (authorization: string)
+const getAuthAndDecodeToken = (request: Request)
   => Context<Claims>
 
-const authorize: (slug: string, claims: Claims)
-  => Context<void>
-```
-
----
-
-# Let's take stock
-
-We had two functions.
-
-That are both async and can fail.
-
-One needs to pass it's value to next.
-
-These!?
-
-```typescript
-const decodeToken: (authorization: string)
-  => Context<Claims>
-
-const authorize: (claims: Claims)
-  => Context<void>
+const getSlugLoadAndAuthorizePartiallyApplied = (claims: Claims)
+  => Context<Article>
 ```
 
 ---
@@ -622,9 +770,11 @@ const authorize: (claims: Claims)
 So we have:
 
 ```typescript
-const decodeToken: (authorization: string) => Context<Claims>
+const getAuthAndDecodeToken = (request: Request)
+  => Context<Claims>
 
-const authorize: (claims: Claims) => Context<void>
+const getSlugLoadAndAuthorizePartiallyApplied = (claims: Claims)
+  => Context<Article>
 ```
 
 . . .
@@ -632,7 +782,8 @@ const authorize: (claims: Claims) => Context<void>
 and we want:
 
 ```typescript
-const decodeAndAuthorize: (authorization: string) => Context<void>
+const getAuthAndDecodeTokenAndGetSlugLoadAndAuthorize: (request: Request)
+  => Context<Article>
 ```
 
 ---
@@ -643,7 +794,202 @@ const decodeAndAuthorize: (authorization: string) => Context<void>
 
 
 ```typescript
-const decodeAndAuthorize = (authorization: string): Context<void> => {
-  return decode(authorization).changeContextAndValue(authorize);
+const getAuthAndDecodeTokenAndGetSlugLoadAndAuthorize = (
+  request: Request
+): Context<Article> => {
+  return getAuthAndDecodeToken(request).changeContextAndValue(
+    getSlugLoadAndAuthorize(request)
+  );
 };
 ```
+
+---
+
+# But, for real
+
+```typescript
+const handlerSoFar = (
+  request: Request
+): Context<Article> => {
+  const auth = getAuth(request);
+  const slug = getSlug(request);
+
+  return decodeToken(auth).changeContextAndValue(
+    loadAndAuthorize(slug)
+  );
+};
+```
+
+---
+
+# But, for real
+
+```typescript
+const handlerSoFar = (
+  request: Request
+): FallibleAsynchronousContext<void, Article> => {
+  const auth = getAuth(request);
+  const slug = getSlug(request);
+
+  return decodeToken(auth).changeContextAndValue(
+    loadAndAuthorize(slug)
+  );
+};
+```
+
+---
+
+# But, for real
+
+```typescript
+const handlerSoFar = (
+  request: Request
+): FallibleAsynchronousContext<void, UpdateArticleParams> => {
+  const auth = getAuth(request);
+  const slug = getSlug(request);
+  const params = getParams(request);
+
+  return decodeToken(auth)
+    .changeContextAndValue(loadAndAuthorize(slug))
+    .changeContextAndValue(validate(params));
+};
+```
+
+---
+
+# But, for real
+
+```typescript
+const handlerSoFar = (
+  request: Request
+): FallibleAsynchronousContext<void, Article> => {
+  const auth = getAuth(request);
+  const slug = getSlug(request);
+  const params = getParams(request);
+
+  return decodeToken(auth)
+    .changeContextAndValue(loadAndAuthorize(slug))
+    .changeContextAndValue(article => {
+      return validate(params, article).changeContextAndValue(
+        validParams => {
+          return update(validParams, article);
+        }
+      );
+    });
+};
+```
+
+---
+
+# But, for real
+
+```typescript
+const handlerSoFar = (
+  request: Request
+): FallibleAsynchronousContext<void, Response> => {
+  const auth = getAuth(request);
+  const slug = getSlug(request);
+  const params = getParams(request);
+
+  return decodeToken(auth)
+    .changeContextAndValue(loadAndAuthorize(slug))
+    .changeContextAndValue(article => {
+      return validate(params, article).changeContextAndValue(
+        validParams => {
+          return update(validParams, article);
+        }
+      );
+    })
+    .changeValue(respondSuccess);
+};
+```
+
+---
+
+# But, for real
+
+```typescript
+const handlerSoFar = (
+  request: Request
+): FallibleAsynchronousContext<void, Response> => {
+  const auth = getAuth(request);
+  const slug = getSlug(request);
+  const params = getParams(request);
+
+  return decodeToken(auth)
+    .changeContextAndValue(loadAndAuthorize(slug))
+    .changeContextAndValue(article => {
+      return validate(params, article).changeContextAndValue(
+        validParams => {
+          return update(validParams, article);
+        }
+      );
+    })
+    .changeValue(respondSuccess)
+    .changeErrorToValue(respondFailure);
+};
+```
+
+---
+
+# But, for real
+
+```typescript
+const handler = (
+  request: Request
+): Promise<Article> => {
+  const auth = getAuth(request);
+  const slug = getSlug(request);
+  const params = getParams(request);
+
+  return decodeToken(auth)
+    .then(loadAndAuthorize(slug))
+    .then(article => {
+      return validate(params, article).then(
+        validParams => {
+          return update(validParams, article);
+        }
+      );
+    })
+    .then(respondSuccess)
+    .catch(respondFailure);
+};
+```
+
+---
+
+# But, for real
+
+```typescript
+const handler = async (
+  request: Request
+): Promise<Article> => {
+  const auth = getAuth(request);
+  const slug = getSlug(request);
+  const params = getParams(request);
+
+  try {
+    const token = await decodeToken(auth);
+    const article = await loadAndAuthorize(slug, token);
+    const validParams = await validate(params, article);
+    const updatedArticle = await update(validParams, article);
+
+    return respondSuccess(updatedArticle)
+  } catch (error) {
+    return respondFailure(error);
+  }
+};
+```
+
+---
+
+# Wrapping up
+
+. . .
+
+What is, a Promise? What does using them give us?
+
+. . .
+
+
+THE ABILITY TO COMPOSE COMPLEX THINGS!!!
