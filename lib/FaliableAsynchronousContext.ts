@@ -1,10 +1,14 @@
+type FallibleCallback<R, A> = (
+  resolve: (value: A) => R,
+  reject: (error: Error) => R
+) => R;
+
 export class FallibleAsynchronousContext<R, A> {
-  constructor(
-    private readonly execute: (
-      resolve: (value: A) => R,
-      reject: (error: Error) => R
-    ) => R
-  ) {}
+  public readonly execute: FallibleCallback<R, A>;
+
+  public constructor(operation: FallibleCallback<R, A>) {
+    this.execute = operation;
+  }
 
   public changeValue<B>(
     change: (value: A) => B
