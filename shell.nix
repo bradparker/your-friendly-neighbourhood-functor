@@ -1,10 +1,9 @@
 let
-  nixpkgs = import <nixpkgs> {};
+  nixpkgs = import (builtins.fetchTarball "channel:nixos-18.03") {};
 in
-  nixpkgs.stdenv.mkDerivation {
-    name = "your-friendly-neighbourhood-functor";
+  nixpkgs.mkShell {
     buildInputs = with nixpkgs; [
-      nodejs-11_13_0
+      nodejs
       haskellPackages.patat
     ];
   }
